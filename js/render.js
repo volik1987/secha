@@ -262,9 +262,10 @@ function drawUnit(u) {
   const bob = u.moving && !fly ? -Math.abs(Math.sin(u.anim * (u.T.cav ? 5 : 7))) * 2.5 : 0;
   const lean = u.atkT > 0 ? 3 : 0, flip = (u.dir & 1) === 1;
   const top = sy - h - lift + bob + 4;
-  ctx.save(); ctx.translate(sx, 0); if (flip) ctx.scale(-1, 1);
-  if (u.moving && !fly) ctx.rotate(Math.sin(u.anim * 7) * 0.025);
-  ctx.drawImage(im, -w / 2 + lean, top, w, h);
+  // покачивание при ходьбе — вокруг ног юнита (раньше точкой поворота был верх экрана, и ходоков мотало)
+  ctx.save(); ctx.translate(sx, sy); if (flip) ctx.scale(-1, 1);
+  if (u.moving && !fly) ctx.rotate(Math.sin(u.anim * 7) * 0.02);
+  ctx.drawImage(im, -w / 2 + lean, top - sy, w, h);
   ctx.restore();
   if (u.slowT > G.t) { ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = '10px sans-serif'; ctx.fillText('✦', sx - 4, top - 2) }
   if (sel || u.hp < u.mhp) hpBar(sx, top - 7, Math.min(46, 22 + u.mhp / 25), u.hp / u.mhp, -1);
