@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Сеча: Три знамени</title>
+<link rel="icon" href="img/icon-192.png">
+<style>
+:root{--bg:#17120c;--panel:#2a2016;--panel2:#3a2c1c;--line:#6b5233;--gold:#e8c35a;--txt:#f1e6cf;--mut:#b9a682;--red:#d9502c}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font:14px/1.35 "Trebuchet MS","Segoe UI",sans-serif;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:var(--txt);cursor:pointer}
+#game{position:fixed;inset:0;display:none}
+#game.on{display:block}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:default}
+#top{position:absolute;left:0;right:0;top:0;height:36px;display:flex;align-items:center;gap:18px;padding:0 12px;background:linear-gradient(#2d2217,#21180fdd);border-bottom:2px solid var(--line);z-index:5}
+.res{display:flex;align-items:center;gap:6px;font-weight:bold;font-size:15px;min-width:86px}
+.res i{font-style:normal;font-size:17px}
+#clock{color:var(--mut);margin-left:auto}
+#hspells{display:flex;gap:6px}
+.hs{position:relative;width:30px;height:28px;border:1px solid var(--line);background:var(--panel2);border-radius:5px;font-size:16px;overflow:hidden}
+.hs .cdv{position:absolute;left:0;right:0;bottom:0;background:#000a}
+.hs.on{outline:2px solid var(--gold)}
+#top .tb{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:3px 10px}
+#notes{position:absolute;top:44px;left:50%;transform:translateX(-50%);width:min(620px,80vw);text-align:center;z-index:4;pointer-events:none}
+#notes div{background:#120d08cc;margin:3px auto;padding:3px 12px;border-radius:5px;display:table;transition:opacity .6s;text-shadow:0 1px 2px #000}
+#notes .big{color:var(--gold);font-weight:bold;font-size:16px}
+#notes .fire{color:#ffa45a}
+#notes .alarm{color:#ff8a7a}
+#panel{position:absolute;left:0;right:0;bottom:0;height:178px;display:flex;gap:10px;padding:8px 10px;background:linear-gradient(#2c2117f2,#1d150df8);border-top:2px solid var(--line);z-index:5}
+#mmBox{width:208px;flex:none;display:flex;align-items:center;justify-content:center;background:#0b0906;border:1px solid var(--line);border-radius:6px}
+#mini{width:200px;height:104px;cursor:pointer;image-rendering:pixelated}
+#info{flex:1;min-width:0;background:#1a130cb0;border:1px solid var(--line);border-radius:6px;padding:8px 10px;display:flex;gap:12px;overflow:hidden}
+#info .por{width:96px;height:96px;flex:none;background:#0d0a07 radial-gradient(#3a2c1c,#0d0a07);border:1px solid var(--line);border-radius:6px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+#info .por img{max-width:92%;max-height:92%;object-fit:contain}
+#info h3{margin:0 0 3px;font-size:16px;color:var(--gold)}
+#info .st{color:var(--mut);font-size:13px}
+#info .bar{height:7px;background:#000;border-radius:4px;overflow:hidden;margin:4px 0;width:180px}
+#info .bar b{display:block;height:100%;background:#4caf50}
+.queue{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.qi{width:40px;height:40px;border:1px solid var(--line);border-radius:4px;background:#0d0a07;position:relative;display:flex;align-items:center;justify-content:center;font-size:18px}
+.qi img{max-width:36px;max-height:36px}
+.qi .p{position:absolute;left:0;bottom:0;height:3px;background:var(--gold)}
+.multi{display:flex;flex-wrap:wrap;gap:3px;align-content:flex-start}
+.mu{width:42px;height:46px;border:1px solid var(--line);border-radius:4px;background:#0d0a07;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.mu img{max-width:38px;max-height:40px}
+.mu i{position:absolute;left:2px;right:2px;bottom:2px;height:3px;background:#4caf50}
+#cmds{width:330px;flex:none;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr);gap:5px}
+.cb{position:relative;border:1px solid var(--line);background:linear-gradient(#45341f,#2a1f13);border-radius:6px;display:flex;align-items:center;justify-content:center;padding:2px;overflow:hidden}
+.cb:hover{border-color:var(--gold);background:linear-gradient(#56412a,#33261a)}
+.cb img{max-width:46px;max-height:46px;object-fit:contain;pointer-events:none}
+.cb .ic{font-size:24px;pointer-events:none}
+.cb .k{position:absolute;top:1px;left:3px;font-size:11px;color:var(--gold);font-weight:bold;text-shadow:0 1px 1px #000}
+.cb.dis{filter:grayscale(1) brightness(.6)}
+.cb.act{outline:2px solid var(--gold)}
+.cb .cdv{position:absolute;left:0;right:0;bottom:0;background:#000b;pointer-events:none}
+#tip{position:fixed;z-index:20;max-width:300px;background:#120d08f2;border:1px solid var(--line);border-radius:6px;padding:7px 10px;pointer-events:none;display:none;font-size:13px}
+#tip b{color:var(--gold)}
+#tip .c{color:var(--mut)}
+/* меню */
+#ov{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:#000 url(img/menu.jpg) center/cover}
+#ov.dim{background:#0009}
+#ov.off{display:none}
+.box{background:linear-gradient(#2c2117f4,#1c140cf6);border:2px solid var(--line);border-radius:10px;padding:22px 28px;min-width:340px;max-width:min(860px,94vw);max-height:92vh;overflow:auto;box-shadow:0 10px 40px #000a}
+.box h1{margin:0 0 4px;font:bold 40px/1.1 Georgia,serif;color:var(--gold);text-shadow:0 2px 0 #000,0 0 20px #a5401a;text-align:center;letter-spacing:1px}
+.box h2{margin:0 0 12px;color:var(--gold);font:bold 22px Georgia,serif}
+.box .sub{text-align:center;color:var(--mut);margin-bottom:18px}
+.mb{display:block;width:100%;margin:8px 0;padding:11px;font-size:17px;border:1px solid var(--line);border-radius:7px;background:linear-gradient(#4d3920,#2d2114)}
+.mb:hover{border-color:var(--gold);color:#fff}
+.mb.pri{background:linear-gradient(#8a4a1c,#5a2c10);border-color:#c27b3a}
+.row{display:flex;gap:10px;align-items:center;margin:8px 0;padding:8px 10px;background:#0006;border:1px solid #4a3822;border-radius:7px}
+.row .sw{width:16px;height:16px;border-radius:50%;flex:none}
+.row .nm{width:150px}
+select,input{font:inherit;color:var(--txt);background:#1a130c;border:1px solid var(--line);border-radius:5px;padding:5px 8px}
+.code{font:bold 34px monospace;letter-spacing:6px;color:var(--gold);text-align:center;margin:6px 0}
+.mut{color:var(--mut);font-size:13px}
+.races{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}
+.race{background:#0006;border:1px solid #4a3822;border-radius:8px;padding:10px;font-size:13px}
+.race b{color:var(--gold);font-size:15px}
+.help p{margin:6px 0}
+.help kbd{background:#000;border:1px solid var(--line);border-radius:3px;padding:0 5px;font:12px monospace}
+table.st{border-collapse:collapse;width:100%;margin:10px 0}
+table.st td,table.st th{padding:5px 8px;border-bottom:1px solid #4a3822;text-align:left}
+#load{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:#0d0a07;color:var(--mut);font-size:18px}
+</style>
+</head>
+<body>
+<div id="load">Загрузка… <span id="loadP"></span></div>
+<div id="game">
+  <canvas id="cv"></canvas>
+  <div id="top">
+    <div class="res" title="Золото"><i>🪙</i><span id="rG">0</span></div>
+    <div class="res" title="Дерево"><i>🪵</i><span id="rW">0</span></div>
+    <div class="res" title="Население / жильё"><i>👥</i><span id="rP">0</span></div>
+    <div id="hspells"></div>
+    <span id="clock">0:00</span>
+    <button class="tb" id="sndBtn" title="Звук">🔊</button>
+    <button class="tb" id="menuBtn">Меню (F10)</button>
+  </div>
+  <div id="notes"></div>
+  <div id="panel">
+    <div id="mmBox"><canvas id="mini"></canvas></div>
+    <div id="info"></div>
+    <div id="cmds"></div>
+  </div>
+</div>
+<div id="tip"></div>
+<div id="ov" class="off"><div class="box" id="ovBox"></div></div>
+<script src="js/data.js"></script>
+<script src="js/map.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/render.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/net.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

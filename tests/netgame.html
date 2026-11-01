@@ -1,0 +1,56 @@
+<!doctype html><meta charset="utf-8"><style>iframe{width:900px;height:600px}</style>
+<!-- Сетевой тест: хозяин и два гостя в iframe через PeerJS. Запуск: sh tests/net.sh -->
+<pre id="out">wait</pre><img src="http://127.0.0.1:8799/120">
+<iframe id="h" src="../index.html"></iframe><iframe id="a" src="../index.html"></iframe><iframe id="b" src="../index.html"></iframe>
+<script>
+const out=[],L=s=>{out.push(s);document.getElementById('out').textContent=out.join('\n')};
+const sl=ms=>new Promise(r=>setTimeout(r,ms));
+const until=async(f,ms=15000)=>{const t=Date.now();while(Date.now()-t<ms){try{if(f())return true}catch(e){}await sl(100)}return false};
+(async()=>{try{
+  const w=id=>document.getElementById(id).contentWindow, H=x=>w('h').eval(x), A=x=>w('a').eval(x), B=x=>w('b').eval(x);
+  for(const id of ['h','a','b'])w(id).addEventListener('error',e=>L(id+' ERR '+e.message));
+  L('loaded '+await until(()=>[H,A,B].every(f=>f("typeof mainMenu==='function'&&!document.getElementById('load')")),40000));
+  H("netHost([{kind:'human',race:'rus',name:'Хозяин'},{kind:'open'},{kind:'open'}]).then(()=>renderLobby(),e=>window.__e=e.type)");
+  await until(()=>H("NET.peer&&NET.peer.open"),20000);const code=H("NET.code");L('code '+code+' err '+H("window.__e"));
+  A(`netJoin('${code}','Гость А')`);B(`netJoin('${code}','Гость Б')`);
+  L('both joined '+await until(()=>H("NET.conns.length")===2&&A("NET.me")>0&&B("NET.me")>0,25000)+' slots A='+A("NET.me")+' B='+B("NET.me"));
+  L('names on host: '+H("NET.slots.map(s=>s.name).join(', ')"));
+  A("NET.slots[NET.me].race='teu';send(NET.conn,{t:'race',race:'teu'})");
+  await until(()=>H("NET.slots[1].race")==='teu',5000);
+  L('lobby on B: '+B("document.getElementById('ovBox').innerText.replace(/\\n+/g,' | ').slice(0,160)"));
+  H("lobbyStart()");
+  L('started '+await until(()=>A("G&&G.units.length>0")&&B("G&&G.units.length>0"),10000));
+  L('races: '+H("G.players.map(p=>p.race+':'+p.kind).join(' ')")+' / guest A sees self '+A("G.players[G.me].race"));
+  await sl(1500);
+  const snapU=f=>f("JSON.stringify(G.units.filter(u=>u.own===G.me).map(u=>[u.id,Math.round(u.x),Math.round(u.y)]).sort())");
+  L('A own units on A: '+A("G.units.filter(u=>u.own===G.me).length")+' on host: '+H("G.units.filter(u=>u.own===1).length"));
+  L('A sees enemy units: '+A("G.units.filter(u=>u.own!==G.me&&u.own<3).length")+' (туман — должно быть 0)');
+  // приказ гостя: работники идут
+  const ids=A("JSON.stringify(G.units.filter(u=>u.own===G.me&&u.arch==='worker').map(u=>u.id))");
+  const p0=H(`JSON.stringify(ents.get(${JSON.parse(ids)[0]}).x)`);
+  A(`const p=G.players[G.me];issue({c:'move',ids:${ids},x:p.start.x-4,y:p.start.y+6})`);
+  await sl(2500);
+  L(`guest move: x on host ${p0} -> ${H(`ents.get(${JSON.parse(ids)[0]}).x.toFixed(1)`)}, on guest ${A(`ents.get(${JSON.parse(ids)[0]}).x.toFixed(1)`)}`);
+  // стройка гостя
+  A(`const p=G.players[G.me];let s=null;for(let r=4;r<12&&!s;r++)for(let k=0;k<16&&!s;k++){const tx=Math.round(p.start.x+Math.cos(k)*r),ty=Math.round(p.start.y+Math.sin(k)*r);if(canPlace(2,tx,ty))s=[tx,ty]}window.__s=s;issue({c:'build',ids:${ids}.slice(0,3),b:'house',tx:s[0],ty:s[1]})`);
+  L('house placed by A: '+await until(()=>H("G.blds.some(b=>b.own===1&&b.arch==='house')")&&A("G.blds.some(b=>b.own===G.me&&b.arch==='house')"),15000));
+  // тренировка
+  A("const h=G.blds.find(b=>b.own===G.me&&b.arch==='hall');issue({c:'train',bid:h.id,u:'worker'})");
+  L('queue on A: '+await until(()=>A("G.blds.find(b=>b.own===G.me&&b.arch==='hall').q.length")>0,5000)+' gold A '+A("G.players[G.me].gold"));
+  // пожар у гостя Б
+  H("const b=G.blds.find(b=>b.own===2&&b.arch==='hall');ignite(b,0.8)");
+  L('B sees fire: '+await until(()=>B("G.blds.find(b=>b.own===G.me&&b.arch==='hall').fire")>0.5,5000));
+  L('B fire note: '+B("document.getElementById('notes').innerText.replace(/\\n/g,' | ').slice(0,200)"));
+  // размер снимка
+  H("window.__mx=0;for(const k of NET.conns){const c=k.conn,s0=c.send.bind(c);c.send=d=>{__mx=Math.max(__mx,d.length);s0(d)}}");
+  await sl(2000);L('max snapshot bytes '+H("__mx"));
+  L('B rendering ok, canvas '+B("document.getElementById('cv').width"));
+  // отключение гостя А
+  A("netClose()");
+  L('A dropped -> host AI: '+await until(()=>H("G.players[1].kind")==='ai',8000));
+  // хозяин уходит
+  H("netClose()");
+  L('B gets drop msg: '+await until(()=>B("document.getElementById('ovBox').innerText").includes('потеряна'),8000));
+}catch(e){L('ERR '+e.message+' '+e.stack)}
+L('DONE')})();
+</script>
