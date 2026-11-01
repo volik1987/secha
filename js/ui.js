@@ -408,7 +408,21 @@ function mainMenu() {
     <button class="mb pri" onclick="soloMenu()">Одиночная игра</button>
     <button class="mb" onclick="netMenu()">Игра по сети (2–3 игрока)</button>
     <button class="mb" onclick="helpMenu()">Как играть</button>
+    ${IS_APP ? '' : '<button class="mb" onclick="downloadMenu()">Скачать для ПК</button>'}
     <div class="mut" style="text-align:center;margin-top:10px">Для компьютера с мышью и клавиатурой</div>`);
+}
+// настольная версия (Electron) — та же игра, кнопка скачивания в ней не нужна
+const IS_APP = /Electron/.test(navigator.userAgent);
+const DL = 'https://github.com/volik1987/secha/releases/latest/download/';
+function downloadMenu() {
+  const mac = /Mac/.test(navigator.platform), win = /Win/.test(navigator.platform);
+  ov(`<h2>Скачать для ПК</h2><p class="mut">Та же игра в отдельном окне: работает без браузера, одиночная игра — и без интернета. Для игры по сети интернет нужен, и с браузерной версией можно играть вместе.</p>
+    <a class="mb ${win ? 'pri' : ''}" style="text-align:center;text-decoration:none;color:var(--txt)" href="${DL}Secha-windows.exe">Windows 10/11 (x64) — 121 МБ</a>
+    <a class="mb ${mac ? 'pri' : ''}" style="text-align:center;text-decoration:none;color:var(--txt)" href="${DL}Secha-mac-arm64.dmg">macOS, Apple M1–M4 — 132 МБ</a>
+    <a class="mb" style="text-align:center;text-decoration:none;color:var(--txt)" href="${DL}Secha-mac-x64.dmg">macOS, Intel — 137 МБ</a>
+    <p class="mut"><b>Windows:</b> программа без установки — просто запустите. Если появится «Windows защитила компьютер», нажмите «Подробнее» → «Выполнить в любом случае».<br>
+    <b>Mac:</b> откройте .dmg и перетащите «Secha» в Программы. Если при первом запуске macOS не даёт открыть — правый клик по приложению → «Открыть» (или Системные настройки → Конфиденциальность и безопасность → «Всё равно открыть»).</p>
+    <button class="mb" onclick="mainMenu()">Назад</button>`);
 }
 const LS = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem('secha-' + k)); localStorage.setItem('secha-' + k, JSON.stringify(v)) } catch (e) { } };
 const raceSel = (id, v, on) => `<select id="${id}" ${on ? `onchange="${on}"` : ''}>${Object.keys(RACES).map(r => `<option value="${r}" ${r === v ? 'selected' : ''}>${RACES[r].name}</option>`).join('')}</select>`;

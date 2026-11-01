@@ -1,0 +1,35 @@
+{
+  "name": "secha",
+  "version": "1.0.0",
+  "description": "Сеча: Три знамени — стратегия в реальном времени",
+  "main": "main.js",
+  "author": "volik1987",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "sh build.sh"
+  },
+  "devDependencies": {
+    "electron": "^45.2.0",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "io.github.volik1987.secha",
+    "productName": "Secha",
+    "copyright": "volik1987",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "app/**/*", "build/icon.png", "package.json"],
+    "mac": {
+      "category": "public.app-category.strategy-games",
+      "icon": "build/icon.png",
+      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }],
+      "artifactName": "Secha-mac-${arch}.${ext}"
+    },
+    "dmg": { "title": "Сеча" },
+    "win": {
+      "icon": "build/icon.png",
+      "target": [{ "target": "portable", "arch": ["x64"] }],
+      "artifactName": "Secha-windows.${ext}"
+    }
+  }
+}

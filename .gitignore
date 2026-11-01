@@ -1,2 +1,5 @@
 raw/
 .DS_Store
+desktop/node_modules/
+desktop/app/
+desktop/dist/
